@@ -1,0 +1,7 @@
+{
+  "host": "http://localhost:58091",
+  "username": "admin",
+  "password": "admin",
+  "pluginId": 7,
+  "entryPath": "hostc"
+}
