@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hostc 隧道</title>
+    <link rel="stylesheet" href="static/css/fonts.css">
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+
+<!-- App Bar -->
+<div class="app-bar">
+    <h1>Hostc 隧道</h1>
+</div>
+
+<!-- Tab Content -->
+<div class="tab-content">
+
+    <!-- 首页 -->
+    <div id="tab-home" class="tab-page active">
+        <div class="container">
+
+            <!-- 状态卡片 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="material-symbols-outlined">info</span>
+                    <span class="card-title">状态</span>
+                </div>
+                <div class="card-body">
+                    <div class="info-row">
+                        <span class="info-label">隧道状态</span>
+                        <span class="info-value">
+                            <span id="status-dot" class="status-dot stopped"></span>
+                            <span id="status-text">检查中...</span>
+                        </span>
+                    </div>
+                    <div id="error-row" class="info-row hidden">
+                        <span class="info-label">错误</span>
+                        <span class="info-value" id="error-text" style="color:var(--md-error);"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 隧道控制卡片 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="material-symbols-outlined">tunnel</span>
+                    <span class="card-title">隧道控制</span>
+                </div>
+                <div class="card-body">
+                    <div class="action-row">
+                        <button id="btn-start" class="btn-filled">
+                            <span class="material-symbols-outlined">play_arrow</span>
+                            启动隧道
+                        </button>
+                        <button id="btn-stop" class="btn-filled btn-error hidden">
+                            <span class="material-symbols-outlined">stop</span>
+                            停止
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 隧道信息卡片 -->
+            <div id="tunnel-card" class="card hidden">
+                <div class="card-header">
+                    <span class="material-symbols-outlined">language</span>
+                    <span class="card-title">隧道信息</span>
+                </div>
+                <div class="card-body">
+                    <div id="tunnel-url" class="tunnel-url hidden">
+                        <span class="material-symbols-outlined" style="font-size:18px;flex-shrink:0;">link</span>
+                        <a id="tunnel-link" href="#" target="_blank"></a>
+                        <button id="btn-copy-url" class="btn-copy" title="复制">
+                            <span class="material-symbols-outlined" style="font-size:18px;">content_copy</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 设置页 -->
+    <div id="tab-settings" class="tab-page">
+        <div class="container">
+
+            <!-- 服务器配置卡片 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="material-symbols-outlined">dns</span>
+                    <span class="card-title">隧道服务器</span>
+                </div>
+                <div class="card-body">
+                    <div class="text-field">
+                        <input type="text" id="input-server-url" placeholder=" " value="https://hostc.net">
+                        <label>服务器地址</label>
+                    </div>
+                    <div class="text-field">
+                        <input type="number" id="input-data-channels" placeholder=" " value="2" min="1" max="8">
+                        <label>数据通道数</label>
+                    </div>
+                    <div class="action-row">
+                        <button id="btn-save-config" class="btn-filled">
+                            <span class="material-symbols-outlined">save</span>
+                            保存配置
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- Tab Bar (Bottom Navigation) -->
+<div class="tab-bar">
+    <button class="tab-item active" data-tab="home">
+        <span class="material-symbols-outlined">home</span>
+        <span>首页</span>
+    </button>
+    <button class="tab-item" data-tab="settings">
+        <span class="material-symbols-outlined">settings</span>
+        <span>设置</span>
+    </button>
+</div>
+
+<!-- Snackbar -->
+<div id="snackbar" class="snackbar"></div>
+
+<!-- Scripts -->
+<script type="module" src="static/js/app.js"></script>
+
+</body>
+</html>
