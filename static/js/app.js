@@ -1,7 +1,7 @@
 /**
  * Hostc 隧道 — 前端应用逻辑
  */
-import { apiGet, apiPost, apiPut } from './common.js';
+const { apiGet, apiPost, apiPut } = SongloftPlugin;
 
 const STATE_LABELS = {
     idle: '未启动',
