@@ -13,7 +13,8 @@
     "storage",
     "websocket"
   ],
-  "updateUrl": "https://raw.githubusercontent.com/songloft-org/songloft-plugin-hostc/main/manifest.json",
+  "updateUrl": "https://raw.githubusercontent.com/songloft-org/songloft-plugin-hostc/main/plugin.json",
+  "download_url": "https://github.com/songloft-org/songloft-plugin-hostc/releases/download/v2026.6.8/hostc.jsplugin.zip",
   "entryHash": "",
   "zipHash": ""
 }
