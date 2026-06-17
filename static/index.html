@@ -69,7 +69,7 @@
                     <div id="tunnel-url" class="tunnel-url hidden">
                         <span class="material-symbols-outlined" style="font-size:18px;flex-shrink:0;">link</span>
                         <a id="tunnel-link" href="#" target="_blank"></a>
-                        <button id="btn-copy-url" class="btn-copy" title="复制">
+                        <button id="btn-copy-url" class="btn-copy" title="复制" aria-label="复制">
                             <span class="material-symbols-outlined" style="font-size:18px;">content_copy</span>
                         </button>
                     </div>
@@ -92,11 +92,11 @@
                 <div class="card-body">
                     <div class="text-field">
                         <input type="text" id="input-server-url" placeholder=" " value="https://hostc.net">
-                        <label>服务器地址</label>
+                        <label for="input-server-url">服务器地址</label>
                     </div>
                     <div class="text-field">
                         <input type="number" id="input-data-channels" placeholder=" " value="2" min="1" max="8">
-                        <label>数据通道数</label>
+                        <label for="input-data-channels">数据通道数</label>
                     </div>
                     <div class="action-row">
                         <button id="btn-save-config" class="btn-filled">
@@ -111,12 +111,12 @@
     </div>
 
 <!-- Tab Bar (Bottom Navigation) -->
-<div class="tab-bar">
-    <button class="tab-item active" data-tab="home">
+<div class="tab-bar" role="tablist">
+    <button class="tab-item active" data-tab="home" role="tab">
         <span class="material-symbols-outlined">home</span>
         <span>首页</span>
     </button>
-    <button class="tab-item" data-tab="settings">
+    <button class="tab-item" data-tab="settings" role="tab">
         <span class="material-symbols-outlined">settings</span>
         <span>设置</span>
     </button>
