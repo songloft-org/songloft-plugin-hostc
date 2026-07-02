@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/songloft-org/plugin-toolchain/main/schemas/plugin.schema.json",
   "name": "Hostc 隧道",
-  "version": "2026.6.9",
+  "version": "2026.7.2",
   "description": "通过 hostc 将本地 Songloft 服务暴露到公网（无需安装额外二进制）",
   "author": "Songloft Team",
   "homepage": "",
@@ -14,7 +14,7 @@
     "websocket"
   ],
   "updateUrl": "https://raw.githubusercontent.com/songloft-org/songloft-plugin-hostc/main/plugin.json",
-  "download_url": "https://github.com/songloft-org/songloft-plugin-hostc/releases/download/v2026.6.9/hostc.jsplugin.zip",
+  "download_url": "https://github.com/songloft-org/songloft-plugin-hostc/releases/download/v2026.7.2/hostc.jsplugin.zip",
   "entryHash": "413a0d05f15f694371415d3228aad67a6b292f0bbbc8232694c478cf3b48e92c",
   "zipHash": "f57b11c335dd0d752766f99359f2ce4e5f95e5078f867df97ccd161cd8c78134"
 }

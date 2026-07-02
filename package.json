@@ -1,6 +1,6 @@
 {
   "name": "songloft-plugin-hostc",
-  "version": "2026.6.9",
+  "version": "2026.7.2",
   "description": "通过 hostc 将本地 Songloft 服务暴露到公网",
   "private": true,
   "scripts": {
