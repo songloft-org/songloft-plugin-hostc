@@ -7,19 +7,27 @@ const router = createRouter();
 
 const STORAGE_KEY_SERVER_URL = "hostc_server_url";
 const STORAGE_KEY_DATA_CHANNELS = "hostc_data_channels";
-const DEFAULT_SERVER_URL = "https://hostc.net";
+const DEFAULT_SERVER_URL = "https://hostc.dev";
 const DEFAULT_DATA_CHANNELS = 2;
+const LEGACY_SERVER_HOSTS = new Set(["api", "hostc.net"]);
 
 let client: HostcClient | null = null;
 let lastPublicUrl = "";
 let lastError = "";
 
 async function getConfig(): Promise<{ serverUrl: string; dataChannels: number }> {
-	const serverUrl =
-		(await songloft.storage.get(STORAGE_KEY_SERVER_URL)) || DEFAULT_SERVER_URL;
+	const storedServerUrl = await songloft.storage.get(STORAGE_KEY_SERVER_URL);
+	const serverUrl = normalizeServerUrl(storedServerUrl);
+	if (storedServerUrl && serverUrl !== storedServerUrl) {
+		await songloft.storage.set(STORAGE_KEY_SERVER_URL, serverUrl);
+		clearObsoleteServerUrlError();
+	}
 	const channelsStr = await songloft.storage.get(STORAGE_KEY_DATA_CHANNELS);
-	const dataChannels = channelsStr ? parseInt(channelsStr, 10) : DEFAULT_DATA_CHANNELS;
-	return { serverUrl, dataChannels: isNaN(dataChannels) ? DEFAULT_DATA_CHANNELS : dataChannels };
+	const dataChannels =
+		typeof channelsStr === "string"
+			? parseInt(channelsStr, 10)
+			: DEFAULT_DATA_CHANNELS;
+	return { serverUrl, dataChannels: normalizeDataChannels(dataChannels) };
 }
 
 async function saveConfig(config: {
@@ -27,13 +35,54 @@ async function saveConfig(config: {
 	dataChannels?: number;
 }): Promise<void> {
 	if (config.serverUrl !== undefined) {
-		await songloft.storage.set(STORAGE_KEY_SERVER_URL, config.serverUrl);
+		await songloft.storage.set(
+			STORAGE_KEY_SERVER_URL,
+			normalizeServerUrl(config.serverUrl),
+		);
 	}
 	if (config.dataChannels !== undefined) {
 		await songloft.storage.set(
 			STORAGE_KEY_DATA_CHANNELS,
-			String(config.dataChannels),
+			String(normalizeDataChannels(config.dataChannels)),
 		);
+	}
+}
+
+function normalizeServerUrl(value: unknown): string {
+	const input = typeof value === "string" ? value.trim() : "";
+	if (!input) {
+		return DEFAULT_SERVER_URL;
+	}
+
+	try {
+		const url = new URL(input);
+		if (
+			(url.protocol !== "http:" && url.protocol !== "https:") ||
+			LEGACY_SERVER_HOSTS.has(url.hostname)
+		) {
+			return DEFAULT_SERVER_URL;
+		}
+		url.pathname = "/";
+		url.search = "";
+		url.hash = "";
+		return url.toString().replace(/\/$/, "");
+	} catch {
+		return DEFAULT_SERVER_URL;
+	}
+}
+
+function normalizeDataChannels(value: unknown): number {
+	const parsed =
+		typeof value === "number" ? value : parseInt(String(value ?? ""), 10);
+	if (!Number.isFinite(parsed)) {
+		return DEFAULT_DATA_CHANNELS;
+	}
+	return Math.min(8, Math.max(1, Math.trunc(parsed)));
+}
+
+function clearObsoleteServerUrlError(): void {
+	if (lastError.includes('Post "https://api/')) {
+		lastError = "";
 	}
 }
 
@@ -43,6 +92,7 @@ function getState(): string {
 }
 
 router.get("/api/status", () => {
+	clearObsoleteServerUrlError();
 	const snapshot = client?.getSnapshot();
 	return jsonResponse({
 		state: snapshot?.state ?? "idle",
@@ -60,12 +110,16 @@ router.post("/api/start", async (req) => {
 
 	const body = req.body ? JSON.parse(String(req.body)) : {};
 	const config = await getConfig();
-	const serverUrl = body.serverUrl || config.serverUrl;
-	const dataChannels = body.dataChannels || config.dataChannels;
+	const serverUrl = normalizeServerUrl(body.serverUrl || config.serverUrl);
+	const dataChannels = normalizeDataChannels(body.dataChannels || config.dataChannels);
 
 	const upstream = createSongloftUpstreamAdapter(
 		() => songloft.plugin.getHostUrl(),
 		() => songloft.plugin.getToken(),
+		(message) => {
+			lastError = message;
+			songloft.log.warn(message);
+		},
 	);
 
 	lastError = "";
@@ -107,7 +161,7 @@ router.post("/api/start", async (req) => {
 				songloft.log.info(event.message);
 				break;
 			default:
-				songloft.log.debug(event.message);
+				songloft.log.info(event.message);
 				break;
 		}
 	});
@@ -144,6 +198,8 @@ router.put("/api/config", async (req) => {
 });
 
 async function onInit(): Promise<void> {
+	await getConfig();
+	clearObsoleteServerUrlError();
 	songloft.log.info("Hostc 隧道插件已初始化");
 }
 

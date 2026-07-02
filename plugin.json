@@ -15,6 +15,6 @@
   ],
   "updateUrl": "https://raw.githubusercontent.com/songloft-org/songloft-plugin-hostc/main/plugin.json",
   "download_url": "https://github.com/songloft-org/songloft-plugin-hostc/releases/download/v2026.6.9/hostc.jsplugin.zip",
-  "entryHash": "",
-  "zipHash": ""
+  "entryHash": "413a0d05f15f694371415d3228aad67a6b292f0bbbc8232694c478cf3b48e92c",
+  "zipHash": "f57b11c335dd0d752766f99359f2ce4e5f95e5078f867df97ccd161cd8c78134"
 }

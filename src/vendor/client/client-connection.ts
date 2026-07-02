@@ -81,15 +81,13 @@ export class ClientConnection {
 		this.credit.reset(this.tunnel.dataChannels);
 		await Promise.all(
 			Array.from({ length: this.tunnel.dataChannels }, async (_, channelId) => {
-				const url = new URL(
+				const url = appendQueryParam(
 					buildDataChannelUrl(this.tunnel.dataUrl, channelId),
-				);
-				url.searchParams.set(
 					"clientConnectionId",
 					this.tunnel.clientConnectionId,
 				);
 				const socket = await openWebSocket(
-					url.toString(),
+					url,
 					this.tunnel.connectToken,
 				);
 				if (this.closed) {
@@ -212,6 +210,13 @@ export class ClientConnection {
 		if (this.streams.has(frame.streamId)) {
 			throw new Error("duplicate stream start");
 		}
+		let resolveRequestEnd!: () => void;
+		const requestEndPromise = new Promise<void>((resolve) => {
+			resolveRequestEnd = resolve;
+		});
+		if (!metadata.hasBody) {
+			resolveRequestEnd();
+		}
 		const stream: StreamState = {
 			id: frame.streamId,
 			kind: metadata.kind,
@@ -219,6 +224,8 @@ export class ClientConnection {
 			target: metadata.target,
 			requestBody: [],
 			requestEndSeq: null,
+			requestEndPromise,
+			resolveRequestEnd,
 			abortController: { aborted: false },
 			upstreamWebSocket: null,
 			pendingInboundFrames: [],
@@ -251,6 +258,10 @@ export class ClientConnection {
 		stream: StreamState,
 		metadata: RequestStartMetadata,
 	): Promise<void> {
+		await stream.requestEndPromise;
+		if (!this.canSendForStream(stream)) {
+			return;
+		}
 		const response = await this.upstream.handleHttp({
 			method: metadata.method,
 			target: metadata.target,
@@ -261,6 +272,21 @@ export class ClientConnection {
 		if (!this.canSendForStream(stream)) {
 			return;
 		}
+		this.emitLog({
+			level: "info",
+			message: "stream.response.start",
+			fields: {
+				streamId: stream.id.toString(),
+				channelId: stream.channelId,
+				status: response.status,
+				bodyBytes:
+					response.body instanceof Uint8Array
+						? response.body.byteLength
+						: typeof response.body === "string"
+							? response.body.length
+							: 0,
+			},
+		});
 		await this.sendMetadataFrame(stream, FRAME_TYPE_RESPONSE_START, {
 			status: response.status,
 			headers: response.headers ?? [],
@@ -486,6 +512,7 @@ export class ClientConnection {
 		metadata: RequestEndMetadata,
 	): Promise<void> {
 		if (metadata.kind === "request.body") {
+			_stream.resolveRequestEnd();
 			return;
 		}
 		_stream.upstreamWebSocket?.close(
@@ -526,6 +553,7 @@ export class ClientConnection {
 			if (!socket || socket.readyState !== WebSocket.OPEN) {
 				throw new Error("data channel unavailable");
 			}
+			await waitForSocketCapacity(socket);
 			const seq = stream.sendNextSeq.get(kind) ?? 0n;
 			const frameBytes = encodeFrame(
 				{
@@ -593,6 +621,7 @@ export class ClientConnection {
 			{ frameType, streamId, seq: 0n, payload },
 			{ maxFrameBytes: this.tunnel.limits.maxFrameBytes },
 		);
+		await waitForSocketCapacity(socket);
 		socket.send(frameBytes);
 	}
 
@@ -677,7 +706,7 @@ export class ClientConnection {
 				stream.channelId,
 				FRAME_TYPE_RESPONSE_ABORT,
 				stream.id,
-				{ reason } satisfies ResponseAbortMetadata,
+				{ reason: normalizeWebSocketCloseReason(reason) } satisfies ResponseAbortMetadata,
 			).catch(() => undefined);
 		}
 	}
@@ -764,6 +793,11 @@ function openWebSocket(url: string, token: string): Promise<WebSocket> {
 	});
 }
 
+function appendQueryParam(url: string, key: string, value: string): string {
+	const separator = url.includes("?") ? "&" : "?";
+	return `${url}${separator}${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+}
+
 function safeCloseWebSocket(
 	socket: WebSocket | null | undefined,
 	code: number,
@@ -800,4 +834,12 @@ function concatUint8Arrays(arrays: Uint8Array[]): Uint8Array {
 
 function errorMessage(error: unknown): string {
 	return error instanceof Error ? error.message : String(error);
+}
+
+function waitForSocketCapacity(socket: WebSocket): Promise<void> {
+	const bufferedAmount = (socket as any).bufferedAmount;
+	if (typeof bufferedAmount !== "number" || bufferedAmount < 1_000_000) {
+		return Promise.resolve();
+	}
+	return new Promise((resolve) => setTimeout(resolve, 5));
 }

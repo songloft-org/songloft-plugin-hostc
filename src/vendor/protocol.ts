@@ -498,12 +498,8 @@ export function buildDataChannelUrl(
 	dataUrl: string,
 	channelId: number,
 ): string {
-	const url = new URL(dataUrl);
-	const basePath = url.pathname.endsWith("/")
-		? url.pathname.slice(0, -1)
-		: url.pathname;
-	url.pathname = `${basePath}/${encodeURIComponent(String(channelId))}`;
-	return url.toString();
+	const separator = dataUrl.endsWith("/") ? "" : "/";
+	return `${dataUrl}${separator}${encodeURIComponent(String(channelId))}`;
 }
 
 export function parseCreateEphemeralTunnelResponse(
@@ -595,6 +591,30 @@ export function filterResponseHeaders(
 		const normalized = name.toLowerCase();
 		return normalized !== "content-encoding" && normalized !== "content-length";
 	});
+}
+
+export function filterHttpRequestHeaders(
+	headers: readonly HeaderEntry[],
+): HeaderEntry[] {
+	return filterHopByHopHeaders(headers).filter(([name]) => {
+		const normalized = name.toLowerCase();
+		return normalized !== "host" && normalized !== "content-length";
+	});
+}
+
+export function filterWebSocketRequestHeaders(
+	headers: readonly HeaderEntry[],
+): HeaderEntry[] {
+	const websocketHeaders = new Set([
+		"sec-websocket-accept",
+		"sec-websocket-extensions",
+		"sec-websocket-key",
+		"sec-websocket-protocol",
+		"sec-websocket-version",
+	]);
+	return filterHttpRequestHeaders(headers).filter(
+		([name]) => !websocketHeaders.has(name.toLowerCase()),
+	);
 }
 
 function asUint8Array(input: Uint8Array | ArrayBuffer): Uint8Array {

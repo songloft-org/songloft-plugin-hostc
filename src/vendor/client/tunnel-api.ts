@@ -20,7 +20,7 @@ export async function createEphemeralTunnel(options: {
 	dataChannels?: number;
 }): Promise<HostcEphemeralTunnel> {
 	const response = await fetch(
-		new URL(EPHEMERAL_TUNNELS_API_PATH, options.serverUrl).toString(),
+		joinServerPath(options.serverUrl, EPHEMERAL_TUNNELS_API_PATH),
 		{
 			method: "POST",
 			headers: { "content-type": "application/json" },
@@ -51,6 +51,12 @@ export async function createEphemeralTunnel(options: {
 		);
 	}
 	return rewriteLocalDataUrl(parsed, options.serverUrl);
+}
+
+function joinServerPath(serverUrl: string, path: string): string {
+	const server = new URL(serverUrl);
+	const origin = `${server.protocol}//${server.host}`;
+	return `${origin}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 export function withJitter(delayMs: number, jitterRatio = 0.2): number {

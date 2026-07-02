@@ -17,6 +17,8 @@ export type StreamState = {
 	target: string;
 	requestBody: Uint8Array[];
 	requestEndSeq: number | null;
+	requestEndPromise: Promise<void>;
+	resolveRequestEnd: () => void;
 	abortController: { aborted: boolean };
 	upstreamWebSocket: HostcUpstreamWebSocket | null;
 	pendingInboundFrames: PendingInboundFrame[];
