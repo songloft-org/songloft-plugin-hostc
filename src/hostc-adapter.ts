@@ -11,6 +11,15 @@ import {
 	type HeaderEntry,
 } from "./vendor/protocol.js";
 
+type SongloftWebSocketOptions = {
+	headers?: Record<string, string>;
+};
+
+type SongloftWebSocketConstructor = new (
+	url: string,
+	options?: SongloftWebSocketOptions,
+) => WebSocket;
+
 export function createSongloftUpstreamAdapter(
 	getHostUrl: () => Promise<string>,
 	getToken: () => Promise<string>,
@@ -32,12 +41,16 @@ export function createSongloftUpstreamAdapter(
 			}
 			requestHeaders["Authorization"] = `Bearer ${token}`;
 
+			const body: ArrayBuffer | undefined = request.body
+				? (Uint8Array.from(request.body).buffer as ArrayBuffer)
+				: undefined;
+
 			let resp: Response;
 			try {
 				resp = await fetch(targetUrl, {
 					method: request.method,
 					headers: requestHeaders,
-					body: request.body ?? undefined,
+					body,
 				});
 			} catch (error) {
 				const message = `local HTTP fetch failed: ${targetUrl}: ${errorMessage(error)}`;
@@ -76,9 +89,10 @@ export function createSongloftUpstreamAdapter(
 			}
 			requestHeaders["Authorization"] = `Bearer ${token}`;
 
-			const ws = new WebSocket(wsUrl, {
+			const SongloftWebSocket = WebSocket as unknown as SongloftWebSocketConstructor;
+			const ws = new SongloftWebSocket(wsUrl, {
 				headers: requestHeaders,
-			} as any);
+			});
 
 			return new Promise((resolve, reject) => {
 				let settled = false;

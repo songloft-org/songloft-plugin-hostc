@@ -511,7 +511,7 @@ export function parseCreateEphemeralTunnelResponse(
 	if (value.protocolVersion !== PROTOCOL_VERSION) {
 		throw new Error("create tunnel returned an invalid v4 response");
 	}
-	return value as CreateEphemeralTunnelResponse;
+	return value as unknown as CreateEphemeralTunnelResponse;
 }
 
 export function normalizeWebSocketCloseCode(

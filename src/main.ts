@@ -1,5 +1,5 @@
 /// <reference types="@songloft/plugin-sdk" />
-import { jsonResponse, createRouter } from "@songloft/plugin-sdk";
+import { jsonResponse, createRouter, type HTTPRequest, type HTTPResponse } from "@songloft/plugin-sdk";
 import { HostcClient } from "./vendor/client/index.js";
 import { createSongloftUpstreamAdapter } from "./hostc-adapter.js";
 
